@@ -1,4 +1,28 @@
 .App{
-  font-size: calc(10px + 2vmin);
+  font-size: calc(10px + 1vmin);
   text-align: center;
+}
+
+th, td{
+  border: 2px solid #bb86fc;
+  padding: 0.5em;
+}
+
+td > input, th > input{
+  padding: 0.5em;
+  width: 8vw;
+  background-color: #121212;
+  color: white;
+}
+
+@media screen and (min-width: 700px){
+  td > input{
+    width: 4vw;
+  }
+}
+
+table{
+  border-collapse: collapse;
+  max-width: 90vw;
+  display: inline-table;
 }
