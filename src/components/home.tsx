@@ -1,6 +1,7 @@
 import { Container } from '@material-ui/core';
 import { ThemeProvider } from '@mui/material';
 import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button'
 import React from 'react';
 import * as types from '../types/inittypes'
 import theme from './theme'
@@ -8,8 +9,16 @@ import Table from './table'
 
 export const Home: React.FC = () => {
 
-    const [nodes, setNodes] = React.useState(1)
-    const[procs, setProcs] = React.useState(1)
+    const [nodes, setNodes] = React.useState(2)
+    const [procs, setProcs] = React.useState(2)
+    const [dis, setDis] = React.useState(false)
+    
+    /*React.useEffect(() => {
+        if (procs > 3) {
+            disabled = true;        
+        }
+    }, []);*/
+
     return (
         <ThemeProvider theme={theme}>
             <div>
@@ -25,7 +34,12 @@ export const Home: React.FC = () => {
                         <p>
                             Enter the number of Servers: 
                         </p>
-                        <TextField inputProps={{ type: 'text', maxlength: '2', pattern: '[0-9]*', style: { padding: '0.5em' } }} color="primary" focused value={procs} onChange={(e) => setProcs(Number(e.currentTarget.value))}/>
+                        <TextField inputProps={{ type: 'text', maxlength: '2', pattern: '[0-9]*', style: { padding: '0.5em' } }} color="primary" focused value={procs}
+                            onChange={(e) => {
+                                setProcs(Number(e.currentTarget.value));
+                                if (Number(e.currentTarget.value) <= 3 && Number(e.currentTarget.value) > 0) { setDis(false) }
+                                else { setDis(true) }
+                            }} />
                     </div>
 
                     <div style={{ marginBlock: "2em" }}>
@@ -41,14 +55,16 @@ export const Home: React.FC = () => {
 
                     <div style={{ marginBlock: "2em" }}>
                     <p>
-                        Enter the Computation Cost Matrix (along with expr value in the last col):
+                        Enter the Computation Cost Matrix (along with expression):
                     </p>
                     <div style={{overflowX: 'auto'}}>
                     <table className="compMat" id="compMat">
                         <Table num1={nodes} num2={procs+1} expr={true} />
                     </table>
                     </div> 
-                    </div>                 
+                    </div>
+                    <Button name="run" sx={{marginInline: '2em', marginBlock: '1em'}} variant="outlined" color="warning">RUN ALGO</Button>
+                    <Button name="simulate" sx={{marginInline: '2em', marginBlock: '1em'}} disabled={dis} variant="outlined" color="warning" >SIMULATE</Button>
                    
                 </Container>
             </div>

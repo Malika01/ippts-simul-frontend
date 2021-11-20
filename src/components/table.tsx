@@ -15,6 +15,21 @@ function Table({ num1, num2, expr }: { num1: number, num2: number, expr: boolean
     let cols: JSX.Element[] = [];
     let rows: JSX.Element[] = [];
 
+    if (expr == true) {
+        cols = [];
+        for (let k = 1; k < num2; k++) [
+            cols.push(<td>Proc{k}</td>)
+        ]
+        rows.push(<tr><td></td>{cols}<td>EXPR</td></tr>)        
+    }
+    else {
+        cols = [];
+        for (let k = 1; k <= num2; k++) [
+            cols.push(<td>Task{k}</td>)
+        ]
+        rows.push(<tr><td></td>{cols}</tr>)
+    }
+
     for (let i = 1; i <= num1; i++){
         cols = [];
         for (let j = 1; j <= num2; j++){
