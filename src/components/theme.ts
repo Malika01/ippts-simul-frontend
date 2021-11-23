@@ -21,6 +21,7 @@ const theme = createTheme({
     },
     typography: {
         "fontFamily": `'Courier New', Courier, monospace`,
+        "fontSize": Number(`calc(12px + 1vmin)`)
     }
 });
 

@@ -8,12 +8,15 @@ import { Task } from '../types/basetypes';
 import theme from './theme'
 import Table from './table'
 import axios from 'axios'
+import ReactChart from './chart';
 
 export const Home: React.FC = () => {
 
     const [nodes, setNodes] = React.useState(2)
     const [procs, setProcs] = React.useState(2)
     const [dis, setDis] = React.useState(false)
+    const [out, setOut] = React.useState(false)
+    console.log("output from storage =", sessionStorage.getItem('ippts-output'))
 
     const sendData = (event) => {
         let adjArr: TaskGraphAdjMatrix = []
@@ -64,7 +67,6 @@ export const Home: React.FC = () => {
 
         console.log("adj matrix =", adjArr)
         console.log("comp matrix =", compArr)
-        alert("check the console!")
       
         axios({
             method: 'post',
@@ -74,7 +76,9 @@ export const Home: React.FC = () => {
                 "computationCostMatrix": compArr
             }
         }).then(function (response) {
-            console.log("output =", response.data)
+            console.log("output array =", response.data)
+            sessionStorage.setItem('ippts-output', JSON.stringify(response.data))
+            setOut(true)
         }).catch(function (error) {
             console.log(error)
         })
@@ -112,7 +116,9 @@ export const Home: React.FC = () => {
                     </p>
                     <div style={{overflowX: 'auto'}}>
                     <table className="adjMat" id="adjMat">
+                    <tbody>
                         <Table num1={nodes} num2={nodes} expr={false} />
+                    </tbody>
                     </table>
                     </div>
                     </div>
@@ -123,14 +129,20 @@ export const Home: React.FC = () => {
                     </p>
                     <div style={{overflowX: 'auto'}}>
                     <table className="compMat" id="compMat">
+                    <tbody>
                         <Table num1={nodes} num2={procs+1} expr={true} />
+                    </tbody>
                     </table>
                     </div> 
                     </div>
 
-                    <Button type="submit" name="run" sx={{ marginInline: '2em', marginBlock: '1em' }} variant="outlined" color="warning">RUN ALGO</Button>
-                    <Button type="submit" name="simulate" sx={{marginInline: '2em', marginBlock: '1em'}} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
-
+                    <Button type="submit" name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
+                    <Button type="submit" name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
+                        
+                        <div className="chart" style={{ marginTop: "2rem" }}>
+                            { out  ? <ReactChart /> : <div></div> }
+                        </div>
+                        
                     </form>
                    
                 </Container>
