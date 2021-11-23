@@ -29,7 +29,7 @@ function Table({ num1, num2, expr }: { num1: number, num2: number, expr: boolean
 
     if (expr == true) {
         for (let k = 1; k < num2; k++) [
-            cols.push(<td>Proc{k}</td>)
+            cols.push(<td>Server{k}</td>)
         ]
         rows.push(<tr><td></td>{cols}<td>EXPR</td></tr>)        
     }

@@ -1,12 +1,12 @@
 import { Chart } from "react-google-charts"
 
-function ReactChart() {
+function ReactChart({ servers }: { servers: number }) {
 
     var output = sessionStorage.getItem('ippts-output')
     var object = JSON.parse(output)
     var length = object.length
     console.log("length of output array=", length)
-    var height = length*50+'px'
+    var height = servers*70+'px'
     
     var rows = []
     rows.push([

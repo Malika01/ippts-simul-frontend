@@ -143,7 +143,7 @@ export const Home: React.FC = () => {
                     <Button type="submit" name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
                         
                         <div className="chart" style={{ marginTop: "2rem" }}>
-                            { out  ? <ReactChart /> : <div></div> }
+                            {out ? <ReactChart servers={ procs } /> : <div></div> }
                         </div>
                         
                     </form>
