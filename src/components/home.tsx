@@ -73,7 +73,7 @@ export const Home: React.FC = () => {
             url: 'http://localhost:5030/ippts',
             headers: { 'content-type': 'application/json' },
             responseType:  'json',
-            data: {
+            data: { 
                 "taskGraph": adjArr,
                 "computationCostMatrix": compArr
             }

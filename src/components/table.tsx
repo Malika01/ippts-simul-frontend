@@ -1,6 +1,12 @@
 const CellAdj = ({ row, col }: { row: number, col: number }) => (
     <td>
-        <input required id={`adjcell${row}${col}`} name={`adjcell${row}${col}`} type='text' /*maxLength={Number('8')}*/ pattern='[+-]?[0-9]*' title='max 3 digit number'/>
+        <input required id={`adjcell${row}${col}`} name={`adjcell${row}${col}`} type='text' /*maxLength={Number('8')}*/ pattern='[+-]?[0-9]*' title='max 3 digit number' defaultValue='0' />
+    </td>
+)
+
+const CellDisable = ({ row, col }: { row: number, col: number }) => (
+    <td>
+        <input disabled id={`adjcell${row}${col}`} name={`adjcell${row}${col}`} type='text' /*maxLength={Number('8')}*/ defaultValue='0' />
     </td>
 )
 
@@ -46,7 +52,12 @@ function Table({ num1, num2, expr }: { num1: number, num2: number, expr: boolean
                 }
             }
             else {
-                cols.push(<CellAdj row={i} col={j} />)
+                if (i == j) {
+                    cols.push(<CellDisable row={i} col={j} />)
+                }
+                else {
+                    cols.push(<CellAdj row={i} col={j} />)                    
+                }
             }
         }
         rows.push(<tr><td>Task{i+1}</td>{cols}</tr>)
