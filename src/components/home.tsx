@@ -49,7 +49,7 @@ export const Home: React.FC = () => {
                         url: "",
                         serverId: j
                     },
-                    cost : Number(data.get(`adjcell${i}${j}`))
+                    cost : Number(data.get(`compcell${i}${j}`))
                 }
                 matrixelem.compCosts.push(compcost)         
             }
@@ -71,6 +71,8 @@ export const Home: React.FC = () => {
         axios({
             method: 'post',
             url: 'http://localhost:5030/ippts',
+            headers: { 'content-type': 'application/json' },
+            responseType:  'json',
             data: {
                 "taskGraph": adjArr,
                 "computationCostMatrix": compArr
