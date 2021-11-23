@@ -17,8 +17,8 @@ function ReactChart() {
     ])
 
     for (let i = 0; i < length; i++){
-        let server: string = 'Server' + object[i].server.serverId
-        let task: string = 'Task' + object[i].task.taskId
+        let server: string = 'Server' + (object[i].server.serverId+1)
+        let task: string = 'Task' + (object[i].task.taskId+1)
         let est: number = object[i].est
         let eft: number = object[i].eft
         rows.push([

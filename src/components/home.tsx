@@ -23,6 +23,7 @@ export const Home: React.FC = () => {
         let compArr: ComputationCostMatrix = []
         event.preventDefault()
         const data = new FormData(event.target)
+        setOut(false)
 
         const task = (i: number) => {
             let task: Task = {
