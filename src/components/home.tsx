@@ -2,13 +2,15 @@ import { Container } from '@material-ui/core';
 import { ThemeProvider } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button'
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ComputationCost, ComputationCostMatrix, ComputationCostMatrixElem, TaskGraphAdjMatrix, TaskGraphAdjMatrixElem, CommCost } from "../types/inittypes";
 import { Task } from '../types/basetypes';
 import theme from './theme'
 import Table from './table'
 import axios from 'axios'
 import ReactChart from './chart';
+import * as io from 'socket.io-client'
+import SimChart from './simchart';
 
 export const Home: React.FC = () => {
 
@@ -16,14 +18,74 @@ export const Home: React.FC = () => {
     const [procs, setProcs] = React.useState(2)
     const [dis, setDis] = React.useState(false)
     const [out, setOut] = React.useState(false)
-    console.log("output from storage =", sessionStorage.getItem('ippts-output'))
+    const [simResp, setSimResp] = React.useState([{ taskId: -1, result: "0" }])
+    const [simRespVal, setSimRespVal] = React.useState(false)
+    const [subButton, setSubButton] = React.useState("none")
+    const [ctr, setCtr] = React.useState(0)
+    const [downJson, setDownJson] = React.useState(true)
+
+    useEffect(() => {
+        if (ctr > 0) {
+            setSimRespVal(true)
+        }
+        console.log('simulation array = ', simResp)
+    }, [simResp] )
+
+    const downloadFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([sessionStorage.getItem('ippts-output')], {type: 'application/json'});
+        element.href = URL.createObjectURL(file);
+        element.download = "ippts.json";
+        element.click();
+    }
+
+    const connectSocket = () => {
+        var abc = sessionStorage.getItem('ippts-output') as String
+        var object = JSON.parse(sessionStorage.getItem('ippts-output'))
+        var len = object.length
+        var socket = io.connect("ws://localhost:5031/sim")
+
+        socket.on('connect', () => {
+            socket.emit("data", abc)
+            console.log('connected')
+        })
+
+        socket.on('simulationresponse', (data) => {
+            //setSimRespVal(false)
+            setCtr(ctr+1)
+            console.log("task received =", data.taskId)
+            console.log("its result =", data.result)
+
+            let array = [
+                {
+                    taskId: data.taskId,
+                    result : data.result
+                }
+            ]
+            setSimResp(simResp => ([...simResp, ...array]))            
+        
+            if (ctr == len) {
+                console.log('disconnected')
+                socket.disconnect()
+            }            
+        })
+    } 
 
     const sendData = (event) => {
+        if (subButton == 'run') {
+            setOut(false)                
+        }
+        else if (subButton == 'simulate') {
+            setSimRespVal(false)
+            setSimResp([{ taskId: -1, result: "0" }])
+            console.log("simu array at beginning = ", simResp)
+            setCtr(0)
+        }
+
         let adjArr: TaskGraphAdjMatrix = []
         let compArr: ComputationCostMatrix = []
-        event.preventDefault()
+        event.preventDefault() 
         const data = new FormData(event.target)
-        setOut(false)
 
         const task = (i: number) => {
             let task: Task = {
@@ -65,9 +127,6 @@ export const Home: React.FC = () => {
             compArr.push(matrixelem)
             adjArr.push(adjelem)
         }
-
-        console.log("adj matrix =", adjArr)
-        console.log("comp matrix =", compArr)
       
         axios({
             method: 'post',
@@ -79,9 +138,14 @@ export const Home: React.FC = () => {
                 "computationCostMatrix": compArr
             }
         }).then(function (response) {
-            console.log("output array =", response.data)
+            console.log("ippts output array =", response.data)
             sessionStorage.setItem('ippts-output', JSON.stringify(response.data))
-            setOut(true)
+            if (subButton == 'run') {
+                setOut(true)                
+            }
+            else if (subButton == 'simulate') {
+                connectSocket()                
+            }
         }).catch(function (error) {
             console.log(error)
         })
@@ -139,12 +203,17 @@ export const Home: React.FC = () => {
                     </div> 
                     </div>
 
-                    <Button type="submit" name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
-                    <Button type="submit" name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
-                        
-                        <div className="chart" style={{ marginTop: "2rem" }}>
-                            {out ? <ReactChart servers={ procs } /> : <div></div> }
-                        </div>
+                        <Button type="submit" onClick={() => { setSubButton("run"); setDownJson(false)}} name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
+                        <Button type="submit" onClick={() => { setSubButton("simulate"); setDownJson(false) }} name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
+
+                        {/*<div className="runChart" style={{ marginTop: "2rem" }}>*/}
+                            {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
+                        {/*</div>*/}
+                        {/*<div className="simChart" style={{ marginTop: "2rem" }}>*/}
+                            {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
+                        {/*</div>*/}
+                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={ downJson } variant="outlined" color="success" onClick={downloadFile}>Download the Result File</Button>
+
                         
                     </form>
                    

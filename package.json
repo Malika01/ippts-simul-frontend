@@ -15,7 +15,8 @@
     "node-fetch": "^3.0.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "react-google-charts": "^3.0.15"
+    "react-google-charts": "^3.0.15",
+    "socket.io-client": "^4.4.0"
   },
   "devDependencies": {
     "@types/react": "^17.0.0",
