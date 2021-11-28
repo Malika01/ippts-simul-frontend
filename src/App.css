@@ -40,3 +40,26 @@ table{
 .chart > div{
   display: inline-block;
 }
+
+::-webkit-scrollbar-thumb{
+  background: rgba(209, 213, 219, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background: rgba(209, 213, 219, 0.4);
+}
+
+::-webkit-scrollbar-track{
+  background:#1e1e1e;
+}
+
+::-webkit-scrollbar{
+  width: 7px;
+}
+
+*{
+  scrollbar-color: rgba(209, 213, 219, 0.2) #1e1e1e;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
