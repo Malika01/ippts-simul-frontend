@@ -23,14 +23,15 @@ export const Home: React.FC = () => {
     const [subButton, setSubButton] = React.useState("none") //button state
     const [ctr, setCtr] = React.useState(0) //counter for simulation
     const [downJson, setDownJson] = React.useState(true) //download button disable
-    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1}])
+    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1}]) //array for progress tasks
+    const scrollTasks = React.useRef(null) //scroll to prog tasks
 
     useEffect(() => {
         if (ctr > 0) {
             setSimRespVal(true)
         }
         console.log('simulation array = ', simResp)
-    }, [simResp] )
+    }, [simResp])
 
     const downloadFile = () => {
         const element = document.createElement("a");
@@ -52,8 +53,6 @@ export const Home: React.FC = () => {
         })
 
         socket.on('simulationprogress', (data) => {
-            var objDiv = document.getElementById("dispTasks");
-            objDiv.scrollTop = objDiv.scrollHeight;
             let received = [
                 {
                     taskId: data.taskId,
@@ -63,10 +62,10 @@ export const Home: React.FC = () => {
                 }
             ]
             setProgress(progress => ([ ...progress, ...received ]))
+            scrollTasks.current.scrollIntoView(true)
         }) 
 
         socket.on('simulationresponse', (data) => {
-            //setSimRespVal(false)
             setCtr(ctr+1)
             console.log("task received =", data.taskId)
             console.log("its result =", data.result)
@@ -225,8 +224,8 @@ export const Home: React.FC = () => {
                             {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
                             {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
 
-                        <div id="dispTasks">
-                            {simRespVal ? <div style={{color: 'rgba(209, 213, 219, 1)', width: '90%', marginInline: '5%', textAlign: 'left', overflow: 'scroll', height: '170px', fontSize: '0.75em'}} >
+                        <div id="dispTasks" ref={scrollTasks}>
+                            {simRespVal ? <div style={{color: 'rgba(209, 213, 219, 1)', width: '90%', marginInline: '5%', textAlign: 'left', overflowY: 'scroll', height: '150px', fontSize: '0.75em'}} >
                                 {progress.map((progress, i) => {
                                     if (i != 0) {
                                         return(<div style={{ marginTop: '0.5em' }}>@Server {progress.serverId} |  {progress.serverTime} |  Task {progress.taskId + 1} is {progress.result}</div>)
@@ -234,7 +233,7 @@ export const Home: React.FC = () => {
                                 })}
                             </div> : <div></div>}
                         </div>
-                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download the Result File</Button>
+                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download Result</Button>
 
                     </form>
                 </Container>
