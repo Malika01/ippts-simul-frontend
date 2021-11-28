@@ -14,15 +14,16 @@ import SimChart from './simchart';
 
 export const Home: React.FC = () => {
 
-    const [nodes, setNodes] = React.useState(2)
-    const [procs, setProcs] = React.useState(2)
-    const [dis, setDis] = React.useState(false)
-    const [out, setOut] = React.useState(false)
-    const [simResp, setSimResp] = React.useState([{ taskId: -1, result: "0" }])
-    const [simRespVal, setSimRespVal] = React.useState(false)
-    const [subButton, setSubButton] = React.useState("none")
-    const [ctr, setCtr] = React.useState(0)
-    const [downJson, setDownJson] = React.useState(true)
+    const [nodes, setNodes] = React.useState(2) //num of nodes
+    const [procs, setProcs] = React.useState(2) //num of servers
+    const [dis, setDis] = React.useState(false) //sim button disable
+    const [out, setOut] = React.useState(false) //display task graph for 'running'
+    const [simResp, setSimResp] = React.useState([{ taskId: -1, result: "0" }]) //simulation response array
+    const [simRespVal, setSimRespVal] = React.useState(false) //display task graph for 'simulation'
+    const [subButton, setSubButton] = React.useState("none") //button state
+    const [ctr, setCtr] = React.useState(0) //counter for simulation
+    const [downJson, setDownJson] = React.useState(true) //download button disable
+    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1}])
 
     useEffect(() => {
         if (ctr > 0) {
@@ -50,6 +51,20 @@ export const Home: React.FC = () => {
             console.log('connected')
         })
 
+        socket.on('simulationprogress', (data) => {
+            var objDiv = document.getElementById("dispTasks");
+            objDiv.scrollTop = objDiv.scrollHeight;
+            let received = [
+                {
+                    taskId: data.taskId,
+                    result: data.result,
+                    serverTime: data.serverTime,
+                    serverId: data.serverId
+                }
+            ]
+            setProgress(progress => ([ ...progress, ...received ]))
+        }) 
+
         socket.on('simulationresponse', (data) => {
             //setSimRespVal(false)
             setCtr(ctr+1)
@@ -68,7 +83,7 @@ export const Home: React.FC = () => {
                 console.log('disconnected')
                 socket.disconnect()
             }            
-        })
+        }) 
     } 
 
     const sendData = (event) => {
@@ -78,6 +93,7 @@ export const Home: React.FC = () => {
         else if (subButton == 'simulate') {
             setSimRespVal(false)
             setSimResp([{ taskId: -1, result: "0" }])
+            setProgress([{taskId: -1, result: " ", serverTime: " ", serverId: -1}])
             console.log("simu array at beginning = ", simResp)
             setCtr(0)
         }
@@ -205,18 +221,22 @@ export const Home: React.FC = () => {
 
                         <Button type="submit" onClick={() => { setSubButton("run"); setDownJson(false)}} name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
                         <Button type="submit" onClick={() => { setSubButton("simulate"); setDownJson(false) }} name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
-
-                        {/*<div className="runChart" style={{ marginTop: "2rem" }}>*/}
-                            {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
-                        {/*</div>*/}
-                        {/*<div className="simChart" style={{ marginTop: "2rem" }}>*/}
-                            {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
-                        {/*</div>*/}
-                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={ downJson } variant="outlined" color="success" onClick={downloadFile}>Download the Result File</Button>
-
                         
+                            {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
+                            {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
+
+                        <div id="dispTasks">
+                            {simRespVal ? <div style={{color: 'rgba(209, 213, 219, 1)', width: '90%', marginInline: '5%', textAlign: 'left', overflow: 'scroll', height: '170px', fontSize: '0.75em'}} >
+                                {progress.map((progress, i) => {
+                                    if (i != 0) {
+                                        return(<div style={{ marginTop: '0.5em' }}>@Server {progress.serverId} |  {progress.serverTime} |  Task {progress.taskId + 1} is {progress.result}</div>)
+                                    }  
+                                })}
+                            </div> : <div></div>}
+                        </div>
+                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download the Result File</Button>
+
                     </form>
-                   
                 </Container>
             </div>
         </ThemeProvider>
