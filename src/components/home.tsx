@@ -2,28 +2,105 @@ import { Container } from '@material-ui/core';
 import { ThemeProvider } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button'
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ComputationCost, ComputationCostMatrix, ComputationCostMatrixElem, TaskGraphAdjMatrix, TaskGraphAdjMatrixElem, CommCost } from "../types/inittypes";
 import { Task } from '../types/basetypes';
 import theme from './theme'
 import Table from './table'
 import axios from 'axios'
 import ReactChart from './chart';
+import * as io from 'socket.io-client'
+import SimChart from './simchart';
 
 export const Home: React.FC = () => {
 
-    const [nodes, setNodes] = React.useState(2)
-    const [procs, setProcs] = React.useState(2)
-    const [dis, setDis] = React.useState(false)
-    const [out, setOut] = React.useState(false)
-    console.log("output from storage =", sessionStorage.getItem('ippts-output'))
+    const [nodes, setNodes] = React.useState(2) //num of nodes
+    const [procs, setProcs] = React.useState(2) //num of servers
+    const [dis, setDis] = React.useState(false) //sim button disable
+    const [out, setOut] = React.useState(false) //display task graph for 'running'
+    const [simResp, setSimResp] = React.useState([{ taskId: -1, result: "0" }]) //simulation response array
+    const [simRespVal, setSimRespVal] = React.useState(false) //display task graph for 'simulation'
+    const [subButton, setSubButton] = React.useState("none") //button state
+    const [ctr, setCtr] = React.useState(0) //counter for simulation
+    const [downJson, setDownJson] = React.useState(true) //download button disable
+    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1}]) //array for progress tasks
+    const scrollTasks = React.useRef(null) //scroll to prog tasks
+
+    useEffect(() => {
+        if (ctr > 0) {
+            setSimRespVal(true)
+        }
+        console.log('simulation array = ', simResp)
+    }, [simResp])
+
+    const downloadFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([sessionStorage.getItem('ippts-output')], {type: 'application/json'});
+        element.href = URL.createObjectURL(file);
+        element.download = "ippts.json";
+        element.click();
+    }
+
+    const connectSocket = () => {
+        var abc = sessionStorage.getItem('ippts-output') as String
+        var object = JSON.parse(sessionStorage.getItem('ippts-output'))
+        var len = object.length
+        var socket = io.connect("ws://localhost:5031/sim")
+
+        socket.on('connect', () => {
+            socket.emit("data", abc)
+            console.log('connected')
+        })
+
+        socket.on('simulationprogress', (data) => {
+            let received = [
+                {
+                    taskId: data.taskId,
+                    result: data.result,
+                    serverTime: data.serverTime,
+                    serverId: data.serverId
+                }
+            ]
+            setProgress(progress => ([ ...progress, ...received ]))
+            scrollTasks.current.scrollIntoView(true)
+        }) 
+
+        socket.on('simulationresponse', (data) => {
+            setCtr(ctr+1)
+            console.log("task received =", data.taskId)
+            console.log("its result =", data.result)
+
+            let array = [
+                {
+                    taskId: data.taskId,
+                    result : data.result
+                }
+            ]
+            setSimResp(simResp => ([...simResp, ...array]))            
+        
+            if (ctr == len) {
+                console.log('disconnected')
+                socket.disconnect()
+            }            
+        }) 
+    } 
 
     const sendData = (event) => {
+        if (subButton == 'run') {
+            setOut(false)                
+        }
+        else if (subButton == 'simulate') {
+            setSimRespVal(false)
+            setSimResp([{ taskId: -1, result: "0" }])
+            setProgress([{taskId: -1, result: " ", serverTime: " ", serverId: -1}])
+            console.log("simu array at beginning = ", simResp)
+            setCtr(0)
+        }
+
         let adjArr: TaskGraphAdjMatrix = []
         let compArr: ComputationCostMatrix = []
-        event.preventDefault()
+        event.preventDefault() 
         const data = new FormData(event.target)
-        setOut(false)
 
         const task = (i: number) => {
             let task: Task = {
@@ -65,9 +142,6 @@ export const Home: React.FC = () => {
             compArr.push(matrixelem)
             adjArr.push(adjelem)
         }
-
-        console.log("adj matrix =", adjArr)
-        console.log("comp matrix =", compArr)
       
         axios({
             method: 'post',
@@ -79,9 +153,14 @@ export const Home: React.FC = () => {
                 "computationCostMatrix": compArr
             }
         }).then(function (response) {
-            console.log("output array =", response.data)
+            console.log("ippts output array =", response.data)
             sessionStorage.setItem('ippts-output', JSON.stringify(response.data))
-            setOut(true)
+            if (subButton == 'run') {
+                setOut(true)                
+            }
+            else if (subButton == 'simulate') {
+                connectSocket()                
+            }
         }).catch(function (error) {
             console.log(error)
         })
@@ -139,15 +218,24 @@ export const Home: React.FC = () => {
                     </div> 
                     </div>
 
-                    <Button type="submit" name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
-                    <Button type="submit" name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
+                        <Button type="submit" onClick={() => { setSubButton("run"); setDownJson(false)}} name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
+                        <Button type="submit" onClick={() => { setSubButton("simulate"); setDownJson(false) }} name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
                         
-                        <div className="chart" style={{ marginTop: "2rem" }}>
-                            { out  ? <ReactChart /> : <div></div> }
+                            {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
+                            {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
+
+                        <div id="dispTasks" ref={scrollTasks}>
+                            {simRespVal ? <div style={{color: 'rgba(209, 213, 219, 1)', width: '90%', marginInline: '5%', textAlign: 'left', overflowY: 'scroll', height: '150px', fontSize: '0.75em'}} >
+                                {progress.map((progress, i) => {
+                                    if (i != 0) {
+                                        return(<div style={{ marginTop: '0.5em' }}>@Server {progress.serverId} |  {progress.serverTime} |  Task {progress.taskId + 1} is {progress.result}</div>)
+                                    }  
+                                })}
+                            </div> : <div></div>}
                         </div>
-                        
+                        <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download Result</Button>
+
                     </form>
-                   
                 </Container>
             </div>
         </ThemeProvider>

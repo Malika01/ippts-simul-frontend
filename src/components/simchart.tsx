@@ -1,36 +1,41 @@
 import { Chart } from "react-google-charts"
 
-function ReactChart({ servers, tasks }: { servers: number, tasks: number }) {
+function SimChart({ SimArray , servers }: { SimArray : {"taskId": number, "result": string}[] , servers : number }) {
 
     var output = sessionStorage.getItem('ippts-output')
     var object = JSON.parse(output)
-    var length = object.length
+    var lenResult = object.length
+    var length = SimArray.length
     var height = servers * 70 + 'px'
     
     var rows = []
     rows.push([
         { type: 'string', id: 'Server' },
-        { type: 'string', id: 'Task' },
+        { type: 'string', id: 'Task and Result' },
         { type: 'date', id: 'Start' },
         { type: 'date', id: 'End' }
     ])
 
-    for (let i = 0; i < length; i++){
-        let server: string = 'Server' + (object[i].server.serverId+1)
-        let task: string = 'Task' + (object[i].task.taskId+1)
-        let est: number = object[i].est
-        let eft: number = object[i].eft
-        rows.push([
-            server,
-            task,
-            new Date(est),
-            new Date(eft)            
-        ])
+    for (let i = 1; i < length; i++){
+        for (let j = 0; j < lenResult; j++) {
+            if (object[j].task.taskId == SimArray[i].taskId) {
+                let server: string = 'Server' + (object[j].server.serverId+1)
+                let task: string = 'Task' + (object[j].task.taskId+1) + ' , Result = ' + SimArray[i].result
+                let est: number = object[j].est
+                let eft: number = object[j].eft
+                rows.push([
+                    server,
+                    task,
+                    new Date(est),
+                    new Date(eft)            
+                ])                
+            }
+        }      
     }
 
     return (
         <div style={{ marginTop: "2rem" }} className="chart">
-        RESULT OF TASK SCHEDULING BY THE IPPTS ALGO:<br/><br/>
+        RESULT OF REALTIME IPPTS SIMULATION:<br/><br/>
         <Chart
             width={'90%'}
             height={height}
@@ -58,4 +63,4 @@ function ReactChart({ servers, tasks }: { servers: number, tasks: number }) {
     )
 }
 
-export default ReactChart;
+export default SimChart;
