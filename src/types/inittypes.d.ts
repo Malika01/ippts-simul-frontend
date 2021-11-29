@@ -33,7 +33,7 @@ export interface ComputationCostMatrix
   [taskId: number]: ComputationCostMatrixElem;
 }
 
-/* TaskGraphAdjacencyMatrix is of the shape: 
+/* TaskGraphAdjacencyMatrix is of the shape:
 (note: i/of is short for "instance of type")
 [
   {
@@ -98,9 +98,9 @@ Shape of ServerAssMap (mappish) is:
 */
 
 /* IMPORTANT NOTE:
-The ServerAssArray (arrayish) has the tasks in 
+The ServerAssArray (arrayish) has the tasks in
 the order of selection and assignment, so its "keys" are actually
-the order of execution (i.e., ordered by start time of the task) during the IPPTS algorithm. 
+the order of execution (i.e., ordered by start time of the task) during the IPPTS algorithm.
 
 For the ServerAssMap (mappish), the keys are instead the
 taskIds for the tasks assigned to the processors. */
@@ -118,4 +118,9 @@ export class ServerAss {
   server: basetypes.SlaveServer;
   est: number; // estimated start time
   eft: number; // estimated finish time
+}
+
+export interface SimulationResponseData {
+  taskId: number;
+  result: string;
 }
