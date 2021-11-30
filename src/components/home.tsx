@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
         var abc = sessionStorage.getItem('ippts-output') as String
         var object = JSON.parse(sessionStorage.getItem('ippts-output'))
         var len = object.length
-        var socket = io.connect("ws://ec2-18-221-180-165.us-east-2.compute.amazonaws.com:5031/sim")
+        var socket = io.connect("ws://ec2-18-222-199-35.us-east-2.compute.amazonaws.com:5031/sim")
 
         socket.on('connect', () => {
             socket.emit("data", abc)
@@ -147,7 +147,7 @@ export const Home: React.FC = () => {
       
         axios({
             method: 'post',
-            url: 'http://ec2-18-221-180-165.us-east-2.compute.amazonaws.com/ippts',
+            url: 'http://ec2-18-222-199-35.us-east-2.compute.amazonaws.com/ippts',
             headers: { 'content-type': 'application/json' },
             responseType:  'json',
             data: { 
