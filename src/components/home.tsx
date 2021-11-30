@@ -23,14 +23,14 @@ export const Home: React.FC = () => {
     const [subButton, setSubButton] = React.useState("none") //button state
     const [ctr, setCtr] = React.useState(0) //counter for simulation
     const [downJson, setDownJson] = React.useState(true) //download button disable
-    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1}]) //array for progress tasks
+    const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1, serverUrl: " "}]) //array for progress tasks
     const scrollTasks = React.useRef(null) //scroll to prog tasks
 
     useEffect(() => {
         if (ctr > 0) {
             setSimRespVal(true)
         }
-        console.log('simulation array = ', simResp)
+        //console.log('simulation array = ', simResp)
     }, [simResp])
 
     const downloadFile = () => {
@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
         var abc = sessionStorage.getItem('ippts-output') as String
         var object = JSON.parse(sessionStorage.getItem('ippts-output'))
         var len = object.length
-        var socket = io.connect("ws://localhost:5031/sim")
+        var socket = io.connect("ws://ec2-18-221-180-165.us-east-2.compute.amazonaws.com:5031/sim")
 
         socket.on('connect', () => {
             socket.emit("data", abc)
@@ -58,7 +58,8 @@ export const Home: React.FC = () => {
                     taskId: data.taskId,
                     result: data.result,
                     serverTime: data.serverTime,
-                    serverId: data.serverId
+                    serverId: data.serverId,
+                    serverUrl: data.serverUrl
                 }
             ]
             setProgress(progress => ([ ...progress, ...received ]))
@@ -66,9 +67,10 @@ export const Home: React.FC = () => {
         }) 
 
         socket.on('simulationresponse', (data) => {
-            setCtr(ctr+1)
+            setCtr(ctr => ctr+1)
             console.log("task received =", data.taskId)
             console.log("its result =", data.result)
+            console.log("ctr = ", ctr)
 
             let array = [
                 {
@@ -78,7 +80,7 @@ export const Home: React.FC = () => {
             ]
             setSimResp(simResp => ([...simResp, ...array]))            
         
-            if (ctr == len) {
+            if (ctr == len || ctr == -1) {
                 console.log('disconnected')
                 socket.disconnect()
             }            
@@ -92,8 +94,8 @@ export const Home: React.FC = () => {
         else if (subButton == 'simulate') {
             setSimRespVal(false)
             setSimResp([{ taskId: -1, result: "0" }])
-            setProgress([{taskId: -1, result: " ", serverTime: " ", serverId: -1}])
-            console.log("simu array at beginning = ", simResp)
+            setProgress([{taskId: -1, result: " ", serverTime: " ", serverId: -1, serverUrl: " "}])
+            //console.log("simu array at beginning = ", simResp)
             setCtr(0)
         }
 
@@ -145,7 +147,7 @@ export const Home: React.FC = () => {
       
         axios({
             method: 'post',
-            url: 'http://localhost:5030/ippts',
+            url: 'http://ec2-18-221-180-165.us-east-2.compute.amazonaws.com/ippts',
             headers: { 'content-type': 'application/json' },
             responseType:  'json',
             data: { 
@@ -219,7 +221,7 @@ export const Home: React.FC = () => {
                     </div>
 
                         <Button type="submit" onClick={() => { setSubButton("run"); setDownJson(false)}} name="run" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} variant="outlined" color="warning">RUN ALGO</Button>
-                        <Button type="submit" onClick={() => { setSubButton("simulate"); setDownJson(false) }} name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
+                        <Button type="submit" onClick={() => { setSubButton("simulate"); setDownJson(false);  }} name="simulate" sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={dis} variant="outlined" color="warning">SIMULATE</Button>
                         
                             {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
                             {simRespVal ? <SimChart SimArray={ simResp } servers={ procs }/> : <div></div>}
@@ -228,12 +230,13 @@ export const Home: React.FC = () => {
                             {simRespVal ? <div style={{color: 'rgba(209, 213, 219, 1)', width: '90%', marginInline: '5%', textAlign: 'left', overflowY: 'scroll', height: '150px', fontSize: '0.75em'}} >
                                 {progress.map((progress, i) => {
                                     if (i != 0) {
-                                        return(<div style={{ marginTop: '0.5em' }}>@Server {progress.serverId} |  {progress.serverTime} |  Task {progress.taskId + 1} is {progress.result}</div>)
+                                        return (<div key={i} style={{ marginTop: '0.5em' }}>{progress.serverUrl} (Server {progress.serverId}) |  {progress.serverTime} |  Task {progress.taskId + 1} is {progress.result}</div>)
                                     }  
                                 })}
                             </div> : <div></div>}
                         </div>
                         <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download Result</Button>
+                        {/*<Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={!simRespVal} variant="outlined" color="error" onClick={() => { setCtr(-1) }}>Stop Simulation</Button>*/}
 
                     </form>
                 </Container>
