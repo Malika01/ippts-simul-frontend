@@ -147,7 +147,7 @@ export const Home: React.FC = () => {
       
         axios({
             method: 'post',
-            url: 'ec2-18-222-199-35.us-east-2.compute.amazonaws.com:5030/ippts',
+            url: 'http://ec2-18-222-199-35.us-east-2.compute.amazonaws.com:5030/ippts',
             headers: { 'content-type': 'application/json' },
             responseType:  'json',
             data: { 
