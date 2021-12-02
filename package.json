@@ -2,7 +2,7 @@
   "name": "ippts-simul-frontend",
   "version": "0.0.0",
   "scripts": {
-    "dev": "node src/types/types.mjs && vite",
+    "dev": "node src/types/types.mjs && vite --host",
     "build": "node src/types/types.mjs && tsc && vite build",
     "serve": "vite preview"
   },
