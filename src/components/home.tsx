@@ -21,17 +21,27 @@ export const Home: React.FC = () => {
     const [simResp, setSimResp] = React.useState([{ taskId: -1, result: "0" }]) //simulation response array
     const [simRespVal, setSimRespVal] = React.useState(false) //display task graph for 'simulation'
     const [subButton, setSubButton] = React.useState("none") //button state
-    const [ctr, setCtr] = React.useState(0) //counter for simulation
+    const [counter, setCounter] = React.useState<number>(0) //counter for simulation
     const [downJson, setDownJson] = React.useState(true) //download button disable
     const [progress, setProgress] = React.useState([{taskId: -1, result: " ", serverTime: " ", serverId: -1, serverUrl: " "}]) //array for progress tasks
     const scrollTasks = React.useRef(null) //scroll to prog tasks
+    let socket : any
 
     useEffect(() => {
-        if (ctr > 0) {
+        if (counter > 0) {
             setSimRespVal(true)
         }
         //console.log('simulation array = ', simResp)
     }, [simResp])
+
+    
+    useEffect(() => {
+        console.log('counter in use effect =', counter)
+        if (counter == -1) {
+            //console.log('simulation array = ', simResp)
+            socket.disconnect()         
+        }
+    }, [counter])
 
     const downloadFile = () => {
         const element = document.createElement("a");
@@ -45,7 +55,8 @@ export const Home: React.FC = () => {
         var abc = sessionStorage.getItem('ippts-output') as String
         var object = JSON.parse(sessionStorage.getItem('ippts-output'))
         var len = object.length
-        var socket = io.connect('ws://'+import.meta.env.VITE_MASTER_URL+':5031/sim')
+        socket = io.connect('ws://'+import.meta.env.VITE_MASTER_URL+':5031/sim')
+        
 
         socket.on('connect', () => {
             socket.emit("data", abc)
@@ -64,13 +75,15 @@ export const Home: React.FC = () => {
             ]
             setProgress(progress => ([ ...progress, ...received ]))
             scrollTasks.current.scrollIntoView(true)
+            console.log("counter in progress = ", counter)
         }) 
 
         socket.on('simulationresponse', (data) => {
-            setCtr(ctr => ctr+1)
+            console.log("counter at line 81=", counter)
+            setCounter(counter+1)
             console.log("task received =", data.taskId)
             console.log("its result =", data.result)
-            console.log("ctr = ", ctr)
+            console.log("counter = ", counter)
 
             let array = [
                 {
@@ -80,7 +93,7 @@ export const Home: React.FC = () => {
             ]
             setSimResp(simResp => ([...simResp, ...array]))            
         
-            if (ctr == len || ctr == -1) {
+            if (counter == len || counter == -1) {
                 console.log('disconnected')
                 socket.disconnect()
             }            
@@ -96,7 +109,7 @@ export const Home: React.FC = () => {
             setSimResp([{ taskId: -1, result: "0" }])
             setProgress([{taskId: -1, result: " ", serverTime: " ", serverId: -1, serverUrl: " "}])
             //console.log("simu array at beginning = ", simResp)
-            setCtr(0)
+            setCounter(0)
         }
 
         let adjArr: TaskGraphAdjMatrix = []
@@ -236,7 +249,7 @@ export const Home: React.FC = () => {
                             </div> : <div></div>}
                         </div>
                         <Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={downJson} variant="outlined" color="success" onClick={downloadFile}>Download Result</Button>
-                        {/*<Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={!simRespVal} variant="outlined" color="error" onClick={() => { setCtr(-1) }}>Stop Simulation</Button>*/}
+                        {/*<Button sx={{ marginInline: '2em', marginBlock: '1em', fontSize: `calc(12px + 1vmin)` }} disabled={!simRespVal} variant="outlined" color="error" onClick={() => { setCounter(-1) }}>Stop Simulation</Button>*/}
 
                     </form>
                 </Container>
