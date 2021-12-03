@@ -60,8 +60,6 @@ export const Home: React.FC = () => {
   }, [simResp]);*/
 
   useEffect(() => {
-    var object = JSON.parse(sessionStorage.getItem("ippts-output"));
-    var len = object.length;
     if (counter > 0) {
         setSimRespVal(true);
     }
