@@ -32,7 +32,8 @@ export const Home: React.FC = () => {
     { taskId: -1, result: " ", serverTime: " ", serverId: -1, serverUrl: " " },
   ]); //array for progress tasks
   const scrollTasks = React.useRef(null); //scroll to prog tasks
-  let socket: any;
+  var socket: any;
+  const [simProgVal, setSimProgVal] = React.useState(false);
 
   function countReducer(state, action) {
     switch (action) {
@@ -51,18 +52,23 @@ export const Home: React.FC = () => {
 
   const [counter, setCounter] = useReducer(countReducer, 0);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (counter > 0) {
       setSimRespVal(true);
     }
     //console.log('simulation array = ', simResp)
-  }, [simResp]);
+  }, [simResp]);*/
 
   useEffect(() => {
+    var object = JSON.parse(sessionStorage.getItem("ippts-output"));
+    var len = object.length;
+    if (counter > 0) {
+        setSimRespVal(true);
+    }
     console.log("counter in use effect =", counter);
-    if (counter == -1) {
-      //console.log('simulation array = ', simResp)
-      socket.disconnect();
+    if ((counter == -1)) {
+        console.log("disconnected")
+        //socket.disconnect()
     }
   }, [counter]);
 
@@ -101,6 +107,14 @@ export const Home: React.FC = () => {
       ];
       setProgress((progress) => [...progress, ...received]);
       scrollTasks.current.scrollIntoView(true);
+      
+        console.log("counter in simulation=", counter)
+
+        if ((counter == -1) && socket != undefined) {
+        console.log("disconnected");
+            //socket.disconnect();
+            //console.log("socket =", socket)
+      }
     });
 
     socket.on("simulationresponse", (data) => {
@@ -116,19 +130,17 @@ export const Home: React.FC = () => {
       } catch (error) {
         console.log(error, "response error");
       }
-
-      if (counter == len || counter == -1) {
-        console.log("disconnected");
-        socket.disconnect();
-      }
     });
   };
 
   const sendData = (event) => {
     if (subButton == "run") {
-      setOut(false);
+        setOut(false)
+        setSimProgVal(false)
+        setSimRespVal(false)
     } else if (subButton == "simulate") {
-      setSimRespVal(false);
+        setSimRespVal(false);
+        setSimProgVal(false)
       setSimResp([{ taskId: -1, result: "0" }]);
       setProgress([
         {
@@ -205,6 +217,7 @@ export const Home: React.FC = () => {
         if (subButton == "run") {
           setOut(true);
         } else if (subButton == "simulate") {
+            setSimProgVal(true)
           connectSocket();
         }
       })
@@ -240,7 +253,12 @@ export const Home: React.FC = () => {
                 color="primary"
                 focused
                 value={nodes}
-                onChange={(e) => setNodes(Number(e.currentTarget.value))}
+                onChange={(e) => {
+                    setNodes(Number(e.currentTarget.value));
+                    setSimRespVal(false);
+                    setSimProgVal(false);
+                    setOut(false);
+                }}
               />
               <p>Enter the number of Servers:</p>
               <TextField
@@ -310,7 +328,10 @@ export const Home: React.FC = () => {
               type="submit"
               onClick={() => {
                 setSubButton("simulate");
-                setDownJson(false);
+                  setDownJson(false);
+                  if (socket != undefined) {
+                    setCounter("disconnect");                      
+                  }                
               }}
               name="simulate"
               sx={{
@@ -326,14 +347,21 @@ export const Home: React.FC = () => {
             </Button>
 
             {out ? <ReactChart servers={procs} tasks={nodes} /> : <div></div>}
+                      
+            {simProgVal ? (
+                <div style={{ marginTop: "2rem", paddingBottom: "1rem"}}>RESULT OF REALTIME IPPTS SIMULATION:</div>
+            ) : (
+                <div></div>
+            )}
+                      
             {simRespVal ? (
               <SimChart SimArray={simResp} servers={procs} />
             ) : (
               <div></div>
             )}
 
-            <div id="dispTasks" ref={scrollTasks}>
-              {simRespVal ? (
+            <div id="dispTasks">
+              {simProgVal ? (
                 <div
                   style={{
                     color: "rgba(209, 213, 219, 1)",
@@ -348,7 +376,7 @@ export const Home: React.FC = () => {
                   {progress.map((progress, i) => {
                     if (i != 0) {
                       return (
-                        <div key={i} style={{ marginTop: "0.5em" }}>
+                        <div key={i} style={{ marginTop: "0.5em" }}  ref={scrollTasks}>
                           {progress.serverUrl} (Server {progress.serverId}) |{" "}
                           {progress.serverTime} | Task {progress.taskId + 1} is{" "}
                           {progress.result}
@@ -374,6 +402,21 @@ export const Home: React.FC = () => {
             >
               Download Result
             </Button>
+            {/*<Button
+              sx={{
+                marginInline: "2em",
+                marginBlock: "1em",
+                fontSize: `calc(12px + 1vmin)`,
+              }}
+              disabled={!simRespVal}
+              variant="outlined"
+              color="error"
+              onClick={() => {                  
+                      setCounter("disconnect")
+                  }}
+            >
+              STOP SIMULATION
+            </Button>*/}
           </form>
         </Container>
       </div>

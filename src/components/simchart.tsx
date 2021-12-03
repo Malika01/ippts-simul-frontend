@@ -34,8 +34,7 @@ function SimChart({ SimArray , servers }: { SimArray : {"taskId": number, "resul
     }
 
     return (
-        <div style={{ marginTop: "2rem" }} className="chart">
-        RESULT OF REALTIME IPPTS SIMULATION:<br/><br/>
+        <div style={{ marginTop: "0" }} className="chart">
         <Chart
             width={'90%'}
             height={height}
