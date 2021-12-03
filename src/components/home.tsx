@@ -375,7 +375,7 @@ export const Home: React.FC = () => {
                     if (i != 0) {
                       return (
                         <div key={i} style={{ marginTop: "0.5em" }}  ref={scrollTasks}>
-                          {progress.serverUrl} (Server {progress.serverId}) |{" "}
+                          {progress.serverUrl} (Server {progress.serverId + 1}) |{" "}
                           {progress.serverTime} | Task {progress.taskId + 1} is{" "}
                           {progress.result}
                         </div>
